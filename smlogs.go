@@ -127,17 +127,9 @@ func (c *Config) Send(details ...string) {
 		return
 	}
 
-	fmt.Println(c)
-	fmt.Print(module, pkage, status, content)
-
 	if c.DebugLevel != "DEBUG" && status == "DEBUG" {
 		return
 	}
-
-	//if len(others) > 0 && others[0] > 3 {
-	//	log.Println("Returning - total times ", others[0])
-	//	return
-	//}
 
 	var jsonStr = []byte(`{"contents":"` + jsonEscape(content) + `", "status":"` + jsonEscape(status) + `", "module":"` + jsonEscape(module) + `", "package":"` + jsonEscape(pkage) + `"}`)
 	if c.Flag == "Y" {
@@ -163,7 +155,6 @@ func (c *Config) Send(details ...string) {
 		}
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Println(string(body))
 		if resp.StatusCode != 200 {
 			log.Println("Debugger Error - response Body:", string(body))
 		}
