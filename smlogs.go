@@ -1,4 +1,4 @@
-package SMLogs
+package main
 
 import (
 	"bytes"
@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -31,6 +30,8 @@ const (
 	Ping     = "PING"
 )
 
+var SMLogger Config
+
 func (c *Config) New(AppName, AppToken, Destination, DebugLevel, Flag, DisplayToConsole string) error {
 	c.AppName = AppName
 	c.AppToken = AppToken
@@ -43,37 +44,60 @@ func (c *Config) New(AppName, AppToken, Destination, DebugLevel, Flag, DisplayTo
 }
 
 func (c *Config) Error(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Error)
+	go c.Send(combinedString, Error, frame.Function, frame.File+" "+string(frame.Line))
 }
 
-func (c *Config) Info(details ...string) {
+func (c *Config) Info(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Info)
+	go c.Send(combinedString, Info, frame.Function, frame.File+" "+string(frame.Line))
 }
 
-func (c *Config) Debug(details ...string) {
+func (c *Config) Debug(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Debug)
+	go c.Send(combinedString, Debug, frame.Function, frame.File+" "+string(frame.Line))
 }
 
-func (c *Config) Critical(details ...string) {
+func (c *Config) Critical(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Critical)
+	go c.Send(combinedString, Critical, frame.Function, frame.File+" "+string(frame.Line))
 }
 
-func (c *Config) Success(details ...string) {
+func (c *Config) Success(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Success)
+	go c.Send(combinedString, Success, frame.Function, frame.File+" "+string(frame.Line))
 }
 
-func (c *Config) Ping(details ...string) {
+func (c *Config) Ping(details ...interface{}) {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
 	combinedString := fmt.Sprintln(details)
-	go c.Send(combinedString, Ping)
+	go c.Send(combinedString, Ping, frame.Function, frame.File+" "+string(frame.Line))
 }
 
 func (c *Config) Send(details ...string) {
-
 	if len(details) < 1 {
 		log.Println("Not enough arguments. Pass at least the log contents.")
 		return
@@ -93,39 +117,19 @@ func (c *Config) Send(details ...string) {
 
 	if len(details) >= 3 {
 		// Get module details
-		module = details[2]
 		status = details[1]
-	} else {
-		pc, _, _, ok := runtime.Caller(2)
-		if ok {
-			funcName := runtime.FuncForPC(pc).Name()
-			lastSlash := strings.LastIndexByte(funcName, '/')
-			if lastSlash < 0 {
-				lastSlash = 0
-			}
-			lastDot := strings.LastIndexByte(funcName[lastSlash:], '.') + lastSlash
-			pkage = funcName[:lastDot]
-			module = funcName[lastDot+1:]
-
-		} else {
-			pkage = ""
-			module = "NA"
-		}
-
-		/*
-			_, file, no, ok := runtime.Caller(1)
-
-			if ok {
-				module = file + string(no)
-			} else  {
-				module = "NA"
-			}*/
+		module = details[2]
+		pkage = details[3]
 	}
 
 	if !c.Setup {
 		log.Println("SMLog is not initialized.")
 		return
 	}
+
+	fmt.Println(c)
+	fmt.Print(module, pkage, status, content)
+
 	if c.DebugLevel != "DEBUG" && status == "DEBUG" {
 		return
 	}
@@ -134,6 +138,7 @@ func (c *Config) Send(details ...string) {
 	//	log.Println("Returning - total times ", others[0])
 	//	return
 	//}
+
 	var jsonStr = []byte(`{"contents":"` + jsonEscape(content) + `", "status":"` + jsonEscape(status) + `", "module":"` + jsonEscape(module) + `", "package":"` + jsonEscape(pkage) + `"}`)
 	if c.Flag == "Y" {
 		if c.DisplayToConsole == "Y" {
