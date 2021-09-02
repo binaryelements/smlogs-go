@@ -41,6 +41,36 @@ func (c *Config) New(AppName, AppToken, Destination, DebugLevel, Flag, DisplayTo
 	return nil
 }
 
+func (c *Config) Error(details ...string) {
+	newDetails := append(details, Error)
+	go c.Send(newDetails...)
+}
+
+func (c *Config) Info(details ...string) {
+	newDetails := append(details, Info)
+	go c.Send(newDetails...)
+}
+
+func (c *Config) Debug(details ...string) {
+	newDetails := append(details, Debug)
+	go c.Send(newDetails...)
+}
+
+func (c *Config) Critical(details ...string) {
+	newDetails := append(details, Critical)
+	go c.Send(newDetails...)
+}
+
+func (c *Config) Success(details ...string) {
+	newDetails := append(details, Success)
+	go c.Send(newDetails...)
+}
+
+func (c *Config) Ping(details ...string) {
+	newDetails := append(details, Ping)
+	go c.Send(newDetails...)
+}
+
 func (c *Config) Send(details ...string) {
 
 	if len(details) < 1 {
@@ -63,6 +93,7 @@ func (c *Config) Send(details ...string) {
 	if len(details) >= 3 {
 		// Get module details
 		module = details[2]
+		status = details[1]
 	} else {
 		pc, _, _, ok := runtime.Caller(1)
 		if ok {
