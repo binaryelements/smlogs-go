@@ -3,6 +3,7 @@ package SMLogs
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -41,34 +42,34 @@ func (c *Config) New(AppName, AppToken, Destination, DebugLevel, Flag, DisplayTo
 	return nil
 }
 
-func (c *Config) Error(details ...string) {
-	newDetails := append(details, Error)
-	go c.Send(newDetails...)
+func (c *Config) Error(details ...interface{}) {
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Error)
 }
 
 func (c *Config) Info(details ...string) {
-	newDetails := append(details, Info)
-	go c.Send(newDetails...)
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Info)
 }
 
 func (c *Config) Debug(details ...string) {
-	newDetails := append(details, Debug)
-	go c.Send(newDetails...)
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Debug)
 }
 
 func (c *Config) Critical(details ...string) {
-	newDetails := append(details, Critical)
-	go c.Send(newDetails...)
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Critical)
 }
 
 func (c *Config) Success(details ...string) {
-	newDetails := append(details, Success)
-	go c.Send(newDetails...)
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Success)
 }
 
 func (c *Config) Ping(details ...string) {
-	newDetails := append(details, Ping)
-	go c.Send(newDetails...)
+	combinedString := fmt.Sprintln(details)
+	go c.Send(combinedString, Ping)
 }
 
 func (c *Config) Send(details ...string) {
@@ -95,7 +96,7 @@ func (c *Config) Send(details ...string) {
 		module = details[2]
 		status = details[1]
 	} else {
-		pc, _, _, ok := runtime.Caller(1)
+		pc, _, _, ok := runtime.Caller(2)
 		if ok {
 			funcName := runtime.FuncForPC(pc).Name()
 			lastSlash := strings.LastIndexByte(funcName, '/')
