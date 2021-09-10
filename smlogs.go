@@ -117,9 +117,9 @@ func (c *Config) Send(details ...string) {
 
 	if len(details) >= 3 {
 		// Get module details
-		status = details[1]
-		module = details[2]
-		pkage = details[3]
+		status = details[0]
+		module = details[1]
+		pkage = details[2]
 	}
 
 	if !c.Setup {
