@@ -127,6 +127,7 @@ func (c *Config) Send(details ...string) {
 		return
 	}
 
+	log.Println(c)
 	if c.DebugLevel != "DEBUG" && status == "DEBUG" {
 		return
 	}
@@ -156,7 +157,7 @@ func (c *Config) Send(details ...string) {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != 200 {
-			log.Println("Debugger Error - response Body:", string(body))
+			log.Println("Debugger Error - response Body:", resp.Status, string(body))
 		}
 	}
 }
